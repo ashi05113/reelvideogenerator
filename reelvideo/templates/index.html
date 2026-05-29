@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReelForge — Product Video Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #080810;
+      --surface:  #0f0f1a;
+      --border:   #1e1e30;
+      --accent:   #ff501e;
+      --accent2:  #ff9a00;
+      --text:     #f0eff8;
+      --muted:    #6b6a80;
+      --success:  #22c55e;
+      --glow:     rgba(255,80,30,.18);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: .6;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative; z-index: 10;
+      padding: 28px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem; font-weight: 800;
+      letter-spacing: -.02em;
+    }
+    .logo span { color: var(--accent); }
+
+    .badge {
+      font-size: .72rem; font-weight: 500; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 5px 12px; border-radius: 99px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative; z-index: 5;
+      text-align: center;
+      padding: 80px 24px 48px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .78rem; font-weight: 500; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--accent2);
+      margin-bottom: 24px;
+    }
+    .hero-eyebrow::before, .hero-eyebrow::after {
+      content: ''; flex: 1; width: 32px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent2));
+    }
+    .hero-eyebrow::after { transform: scaleX(-1); }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.6rem, 5vw, 4.4rem);
+      font-weight: 800; line-height: 1.05;
+      letter-spacing: -.04em;
+      max-width: 760px; margin: 0 auto 20px;
+    }
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      color: var(--muted); font-size: 1.05rem;
+      max-width: 480px; margin: 0 auto 48px;
+      line-height: 1.65;
+    }
+
+    /* ── Steps strip ── */
+    .steps-strip {
+      display: flex; justify-content: center; gap: 0;
+      flex-wrap: wrap;
+      margin: 0 auto 64px;
+      max-width: 700px;
+    }
+
+    .step {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px;
+      font-size: .82rem; color: var(--muted);
+    }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; color: var(--accent);
+      font-weight: 700; flex-shrink: 0;
+    }
+    .step-arrow { color: var(--border); font-size: .9rem; }
+
+    /* ── Card ── */
+    .card-wrap {
+      position: relative; z-index: 5;
+      max-width: 680px; margin: 0 auto 80px;
+      padding: 0 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 40px 36px;
+      box-shadow: 0 0 80px var(--glow), 0 2px 0 rgba(255,255,255,.04) inset;
+    }
+
+    .field-label {
+      display: block;
+      font-size: .78rem; font-weight: 500; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .input-row {
+      display: flex; gap: 10px;
+    }
+
+    input[type="url"] {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input[type="url"]::placeholder { color: var(--muted); }
+    input[type="url"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+
+    .btn-generate {
+      background: linear-gradient(135deg, var(--accent), #d43e0f);
+      color: #fff;
+      border: none; border-radius: 12px;
+      padding: 0 26px;
+      font-family: 'Syne', sans-serif;
+      font-size: .92rem; font-weight: 700; letter-spacing: .04em;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform .15s, box-shadow .15s, opacity .15s;
+      box-shadow: 0 4px 24px rgba(255,80,30,.4);
+    }
+    .btn-generate:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 32px rgba(255,80,30,.5);
+    }
+    .btn-generate:active { transform: scale(.97); }
+    .btn-generate:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Options row ── */
+    .options-row {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .opt-pill {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border); border-radius: 99px;
+      font-size: .8rem; color: var(--muted);
+      cursor: pointer; transition: border-color .15s, color .15s;
+      user-select: none;
+    }
+    .opt-pill:hover { border-color: var(--accent); color: var(--text); }
+    .opt-pill input { display: none; }
+    .opt-pill.active { border-color: var(--accent); color: var(--accent); }
+    .opt-pill .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ── Progress ── */
+    #progress-section { display: none; margin-top: 28px; }
+
+    .progress-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+    .progress-label { font-size: .82rem; color: var(--muted); }
+    .progress-pct { font-size: .82rem; color: var(--accent); font-weight: 600; }
+
+    .progress-bar-bg {
+      height: 4px; background: var(--border); border-radius: 4px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 4px;
+      width: 0%;
+      transition: width .4s ease;
+    }
+
+    .steps-log {
+      margin-top: 16px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .log-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: .82rem; color: var(--muted);
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: opacity .3s, transform .3s;
+    }
+    .log-item.visible { opacity: 1; transform: none; }
+    .log-icon { font-size: 1rem; flex-shrink: 0; }
+
+    /* ── Result ── */
+    #result-section { display: none; margin-top: 28px; }
+
+    .result-box {
+      background: rgba(34,197,94,.06);
+      border: 1px solid rgba(34,197,94,.25);
+      border-radius: 14px; padding: 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+
+    .result-info { display: flex; flex-direction: column; gap: 4px; }
+    .result-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+    .result-meta { font-size: .8rem; color: var(--muted); }
+
+    .btn-download {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--success);
+      color: #000; font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 700;
+      border: none; border-radius: 10px; padding: 12px 22px;
+      cursor: pointer; white-space: nowrap; text-decoration: none;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 4px 20px rgba(34,197,94,.3);
+    }
+    .btn-download:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(34,197,94,.45);
+    }
+
+    /* ── Error ── */
+    #error-section { display: none; margin-top: 28px; }
+    .error-box {
+      background: rgba(255,80,30,.07);
+      border: 1px solid rgba(255,80,30,.28);
+      border-radius: 12px; padding: 16px 20px;
+      font-size: .88rem; color: #ff8060;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+
+    /* ── Features ── */
+    .features {
+      position: relative; z-index: 5;
+      max-width: 900px; margin: 0 auto 100px;
+      padding: 0 24px;
+    }
+
+    .features-heading {
+      text-align: center;
+      font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700;
+      margin-bottom: 36px; color: var(--muted);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 24px 20px;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover {
+      border-color: rgba(255,80,30,.4);
+      transform: translateY(-2px);
+    }
+
+    .feat-icon { font-size: 1.6rem; margin-bottom: 14px; }
+    .feat-title { font-family: 'Syne', sans-serif; font-size: .95rem; font-weight: 700; margin-bottom: 6px; }
+    .feat-desc { font-size: .82rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── Tech stack ── */
+    .stack-row {
+      display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .stack-tag {
+      font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--muted); border: 1px solid var(--border); border-radius: 6px;
+      padding: 5px 10px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 5;
+      text-align: center; padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      font-size: .78rem; color: var(--muted);
+    }
+
+    /* ── Glow blob ── */
+    .blob {
+      position: fixed; border-radius: 50%;
+      filter: blur(100px); pointer-events: none; z-index: 0;
+    }
+    .blob-1 {
+      width: 600px; height: 600px;
+      background: rgba(255,80,30,.08);
+      top: -200px; right: -200px;
+    }
+    .blob-2 {
+      width: 400px; height: 400px;
+      background: rgba(255,154,0,.06);
+      bottom: -100px; left: -100px;
+    }
+
+    @media (max-width: 640px) {
+      header { padding: 20px 20px; }
+      .card { padding: 28px 20px; }
+      .input-row { flex-direction: column; }
+      .btn-generate { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <header>
+    <div class="logo">Reel<span>Forge</span></div>
+    <div class="badge">v1.0 Beta</div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">AI-Powered &nbsp;•&nbsp; Instant Reels</div>
+    <h1>Turn any product URL<br>into a <em>viral reel</em></h1>
+    <p class="hero-sub">
+      Paste a product link — ReelForge scrapes images, writes captions,
+      adds AI voice & exports a 9:16 MP4 ready for Instagram &amp; Reels.
+    </p>
+
+    <!-- Workflow strip -->
+    <div class="steps-strip">
+      <div class="step"><div class="step-num">1</div>Paste URL</div>
+      <div class="step-arrow">→</div>
+      <div class="step"><div class="step-num">2</div>Scrape Images</div>
+      <div class="step-arrow">→</div>
+      <div class="step"><div class="step-num">3</div>AI Captions</div>
+      <div class="step-arrow">→</div>
+      <div class="step"><div class="step-num">4</div>Voiceover</div>
+      <div class="step-arrow">→</div>
+      <div class="step"><div class="step-num">5</div>Export MP4</div>
+    </div>
+  </section>
+
+  <!-- Main card -->
+  <div class="card-wrap">
+    <div class="card">
+
+      <label class="field-label">Product URL</label>
+      <div class="input-row">
+        <input type="url" id="urlInput" placeholder="https://amazon.in/dp/B09... or any product page" />
+        <button class="btn-generate" id="genBtn" onclick="generate()">Generate Reel →</button>
+      </div>
+
+      <!-- Options -->
+      <div class="options-row">
+        <label class="opt-pill active" id="pill-en">
+          <input type="radio" name="lang" value="en" checked>
+          <div class="dot"></div> English Voice
+        </label>
+        <label class="opt-pill" id="pill-hi">
+          <input type="radio" name="lang" value="hi">
+          <div class="dot"></div> Hindi Voice
+        </label>
+        <label class="opt-pill active" id="pill-916">
+          <div class="dot"></div> 9:16 Reel
+        </label>
+        <label class="opt-pill active" id="pill-trans">
+          <div class="dot"></div> Transitions
+        </label>
+      </div>
+
+
+      <!-- Custom Text Box -->
+      <div style="margin-top:20px;">
+        <label class="field-label" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+          <span>Custom Script <span style="color:var(--muted);font-size:.7rem;text-transform:none;letter-spacing:0">(optional — ek line = ek slide)</span></span>
+          <span id="charCount" style="color:var(--muted);font-size:.7rem;font-weight:400;letter-spacing:0">0 / 800</span>
+        </label>
+        <textarea id="customText" maxlength="800" rows="5"
+          placeholder="Apna text yahan likhein...&#10;Har nayi line ek alag slide banega&#10;&#10;Example:&#10;Campus Shoes — Style aur Comfort&#10;Halke aur tikau sole ke saath&#10;Har mauke ke liye perfect&#10;Abhi order karein!"
+          style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:12px;
+                 padding:14px 16px;color:var(--text);font-family:'DM Sans',sans-serif;
+                 font-size:.88rem;line-height:1.6;resize:vertical;outline:none;
+                 transition:border-color .2s,box-shadow .2s;"
+          oninput="document.getElementById('charCount').textContent=this.value.length+' / 800'"
+          onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px var(--glow)'"
+          onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"
+        ></textarea>
+        <div style="margin-top:6px;font-size:.75rem;color:var(--muted);">
+          💡 Khali chhodo toh AI automatically script generate karega
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div id="progress-section">
+        <div class="progress-header">
+          <span class="progress-label" id="progressLabel">Starting…</span>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <div class="steps-log" id="stepsLog"></div>
+      </div>
+
+      <!-- Result -->
+      <div id="result-section">
+        <div class="result-box">
+          <div class="result-info">
+            <div class="result-title" id="resultTitle">Your reel is ready!</div>
+            <div class="result-meta" id="resultMeta">Tap to download MP4</div>
+          </div>
+          <a class="btn-download" id="downloadBtn" href="#" download="product_reel.mp4">
+            ⬇ Download MP4
+          </a>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="error-section">
+        <div class="error-box">
+          <span>⚠</span>
+          <span id="errorMsg">Something went wrong.</span>
+        </div>
+      </div>
+
+    </div><!-- /card -->
+  </div><!-- /card-wrap -->
+
+  <!-- Features -->
+  <section class="features">
+    <div class="features-heading">What ReelForge does automatically</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feat-icon">🔍</div>
+        <div class="feat-title">Smart Scraping</div>
+        <div class="feat-desc">Extracts product title, description & up to 4 images from any product page.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">✍️</div>
+        <div class="feat-title">Auto Captions</div>
+        <div class="feat-desc">Generates punchy, sales-focused slide captions tailored to the product.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🎤</div>
+        <div class="feat-title">AI Voiceover</div>
+        <div class="feat-desc">Text-to-speech in English or Hindi using Google TTS — no mic needed.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🎬</div>
+        <div class="feat-title">Slideshow Video</div>
+        <div class="feat-desc">Smooth fade transitions, text overlays, slide dots — all at 9:16 reel ratio.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">📱</div>
+        <div class="feat-title">Reel-Ready Export</div>
+        <div class="feat-desc">1080×1920 MP4 output — drop directly into Instagram, YouTube Shorts or Reels.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">⚡</div>
+        <div class="feat-title">Under 30 Seconds</div>
+        <div class="feat-desc">Full pipeline — scrape → voice → video — runs locally in under a minute.</div>
+      </div>
+    </div>
+
+    <!-- Tech stack -->
+    <div class="stack-row" style="margin-top:40px">
+      <div class="stack-tag">Flask</div>
+      <div class="stack-tag">BeautifulSoup</div>
+      <div class="stack-tag">gTTS</div>
+      <div class="stack-tag">MoviePy</div>
+      <div class="stack-tag">Pillow</div>
+      <div class="stack-tag">FFmpeg</div>
+      <div class="stack-tag">Python 3.10+</div>
+    </div>
+  </section>
+
+  <footer>Built with ReelForge · Beginner Edition · Open Source</footer>
+
+  <script>
+    // Toggle pills (visual only)
+    document.querySelectorAll('.opt-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        // Radio-style for voice pills
+        if (pill.id === 'pill-en' || pill.id === 'pill-hi') {
+          document.getElementById('pill-en').classList.remove('active');
+          document.getElementById('pill-hi').classList.remove('active');
+          pill.classList.add('active');
+        } else {
+          pill.classList.toggle('active');
+        }
+      });
+    });
+
+    function getLang() {
+      return document.getElementById('pill-hi').classList.contains('active') ? 'hi' : 'en';
+    }
+
+    const STEPS = [
+      { icon: '🌐', text: 'Connecting to product page…' },
+      { icon: '🖼️', text: 'Scraping images & title…' },
+      { icon: '✍️', text: 'Writing captions…' },
+      { icon: '🎤', text: 'Generating AI voiceover…' },
+      { icon: '🎬', text: 'Building slideshow video…' },
+      { icon: '📦', text: 'Exporting MP4…' },
+    ];
+
+    let stepTimer = null;
+
+    function showStep(idx) {
+      const log = document.getElementById('stepsLog');
+      const item = document.createElement('div');
+      item.className = 'log-item';
+      item.innerHTML = `<span class="log-icon">${STEPS[idx].icon}</span>${STEPS[idx].text}`;
+      log.appendChild(item);
+      setTimeout(() => item.classList.add('visible'), 30);
+    }
+
+    function setProgress(pct, label) {
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressPct').textContent = pct + '%';
+      document.getElementById('progressLabel').textContent = label;
+    }
+
+    async function generate() {
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url) {
+        document.getElementById('urlInput').focus();
+        return;
+      }
+
+      // Reset UI
+      document.getElementById('progress-section').style.display = 'block';
+      document.getElementById('result-section').style.display = 'none';
+      document.getElementById('error-section').style.display = 'none';
+      document.getElementById('stepsLog').innerHTML = '';
+      document.getElementById('genBtn').disabled = true;
+      setProgress(0, 'Starting…');
+
+      // Animate fake progress steps while backend works
+      let stepIdx = 0;
+      const progSteps = [8, 22, 40, 58, 78, 92];
+
+      stepTimer = setInterval(() => {
+        if (stepIdx < STEPS.length) {
+          showStep(stepIdx);
+          setProgress(progSteps[stepIdx], STEPS[stepIdx].text);
+          stepIdx++;
+        }
+      }, 1800);
+
+      try {
+        const resp = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, lang: getLang(), custom_text: document.getElementById('customText').value.trim() }),
+        });
+
+        clearInterval(stepTimer);
+        const data = await resp.json();
+
+        if (!resp.ok || data.error) {
+          throw new Error(data.error || 'Server error');
+        }
+
+        setProgress(100, 'Done!');
+        showStep(STEPS.length - 1);   // show last step if not shown
+
+        // Show result
+        document.getElementById('resultTitle').textContent = data.title || 'Your reel is ready!';
+        document.getElementById('resultMeta').textContent =
+          `${data.images_used} slides · MP4 ready to download`;
+        document.getElementById('downloadBtn').href = data.video_url;
+        document.getElementById('result-section').style.display = 'block';
+
+      } catch (err) {
+        clearInterval(stepTimer);
+        setProgress(0, 'Failed');
+        document.getElementById('errorMsg').textContent = err.message;
+        document.getElementById('error-section').style.display = 'block';
+      } finally {
+        document.getElementById('genBtn').disabled = false;
+      }
+    }
+
+    // Enter key support
+    document.getElementById('urlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') generate();
+    });
+  </script>
+</body>
+</html>
