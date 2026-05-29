@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_file, render_template
 import os, uuid, requests, textwrap, traceback, re
 from bs4 import BeautifulSoup
 from gtts import gTTS
-from moviepy import ImageClip, AudioFileClip, concatenate_videoclips
+from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
 from moviepy.video.fx import FadeIn, FadeOut
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
